@@ -16,6 +16,7 @@ module Data.IxSet.Typed.Ix
     , fromList
     , insertList
     , deleteList
+    , deleteSet
     , union
     , intersection
     )
@@ -31,6 +32,7 @@ import qualified Data.Map   as Map
 import qualified Data.Map.Strict as Map.Strict
 import           Data.Set   (Set)
 import qualified Data.Set   as Set
+import Control.Monad (guard)
 
 -- the core datatypes
 
@@ -119,3 +121,11 @@ intersection :: (Ord a, Ord k)
 intersection index1 index2 = Map.filter (not . Set.null) $
                              Map.intersectionWith Set.intersection index1 index2
 
+-- | Deletes a set of values from the index.
+deleteSet :: (Ord a, Ord k) => Set a -> Map k (Set a) -> Map k (Set a)
+deleteSet deletes index2 =
+  Map.mapMaybe
+    (\set ->
+      let diff = Set.difference set deletes
+      in diff <$ guard (not (Set.null diff)))
+    index2
